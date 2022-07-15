@@ -41,14 +41,15 @@ pub fn get_args() -> MyResult<Config> {
             Arg::with_name("files")
                 .value_name("FILE")
                 .help("Input file(s) [default: -]")
+                .default_value("-")
+                .allow_invalid_utf8(true)
                 //.required(true)
                 //.min_values(1)
         )
         .get_matches();
     let number = matches.is_present("number");
     let number_nonblank = matches.is_present("number_nonblank");
-    let files = matches.values_of_lossy("files")
-        .unwrap_or_else(|| vec!["-".to_owned()]);
+    let files = matches.values_of_lossy("files").unwrap();
     Ok(Config::new(&files,
         number,
         number_nonblank))
