@@ -30,6 +30,7 @@ pub fn get_args() -> MyResult<Config> {
                 .short('n')
                 .help("Number lines")
                 .takes_value(false)
+                .conflicts_with("number_nonblank")
         )
         .arg(
             Arg::with_name("number_nonblank")
@@ -43,6 +44,7 @@ pub fn get_args() -> MyResult<Config> {
                 .help("Input file(s) [default: -]")
                 .default_value("-")
                 .allow_invalid_utf8(true)
+                .multiple_values(true)
                 //.required(true)
                 //.min_values(1)
         )
