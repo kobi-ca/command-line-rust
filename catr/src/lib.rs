@@ -14,7 +14,8 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(files: Vec<String>, number_lines: bool, number_nonblank_lines: bool) -> Config {
+    pub fn new(files: Vec<String>, number_lines: bool,
+            number_nonblank_lines: bool) -> Config {
         Config {
             files: files,
             number_lines,
@@ -63,13 +64,27 @@ fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
     }
 }
 
+fn read_file(filename: &str, config: &Config) ->
+    io::Result<io::Lines<io::BufReader<File>>>{
+    let file = File::open(filename)?;
+    Ok(io::BufReader::new(file).lines())
+}
+
 pub fn run(config: Config) -> MyResult<()> {
     dbg!(&config);
-    for filename in config.files {
+    for filename in &config.files {
         println!("{}", filename);
         match open(&filename) {
             Err(err) => eprintln!("Failed to open {}: {}", filename, err),
-            Ok(_) => println!("Opened {}", filename),
+            Ok(_) => { println!("Opened {}", filename);
+                if let Ok(lines) = read_file(&filename, &config) {
+                    for line in lines {
+                        if let Ok(line) = line {
+                            println!("{}", line);
+                        }
+                    }
+                }
+                },
         }
     }
     Ok(())
