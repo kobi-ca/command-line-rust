@@ -14,9 +14,9 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(files: &Vec<String>, number_lines: bool, number_nonblank_lines: bool) -> Config {
+    pub fn new(files: Vec<String>, number_lines: bool, number_nonblank_lines: bool) -> Config {
         Config {
-            files: files.clone(),
+            files: files,
             number_lines,
             number_nonblank_lines,
         }
@@ -53,7 +53,7 @@ pub fn get_args() -> MyResult<Config> {
     let number = matches.is_present("number");
     let number_nonblank = matches.is_present("number_nonblank");
     let files = matches.values_of_lossy("files").unwrap();
-    Ok(Config::new(&files, number, number_nonblank))
+    Ok(Config::new(files, number, number_nonblank))
 }
 
 fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
