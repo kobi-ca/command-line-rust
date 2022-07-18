@@ -65,9 +65,16 @@ fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
 }
 
 fn read_file(fileio: Box<dyn BufRead>, config: &Config) -> MyResult<()>{
+    let mut idx = 1;
     for line in fileio.lines() {
         let l = line?;
-        println!("{}", l);
+        if config.number_lines ||
+            (l.is_empty() && config.number_nonblank_lines) {
+            println!("{} {}", idx, l);
+            idx += 1;
+        } else {
+            println!("{}", l);
+        }
     }
     Ok(())
 }
