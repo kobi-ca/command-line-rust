@@ -64,12 +64,6 @@ fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
     }
 }
 
-// fn read_file(filename: &str, config: &Config) ->
-//     io::Result<io::Lines<io::BufReader<File>>>{
-//     let file = File::open(filename)?;
-//     Ok(io::BufReader::new(file).lines())
-// }
-
 fn read_file(fileio: Box<dyn BufRead>, config: &Config) -> MyResult<()>{
     for line in fileio.lines() {
         let l = line?;
@@ -77,15 +71,6 @@ fn read_file(fileio: Box<dyn BufRead>, config: &Config) -> MyResult<()>{
     }
     Ok(())
 }
-
-// if let Ok(lines) =  {
-//     for line in lines {
-//         if let Ok(line) = line {
-//             println!("{}", line);
-//         }
-//     }
-// }
-
 
 pub fn run(config: Config) -> MyResult<()> {
     dbg!(&config);
