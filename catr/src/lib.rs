@@ -31,6 +31,7 @@ pub fn get_args() -> MyResult<Config> {
         .arg(
             Arg::with_name("number")
                 .short('n')
+                .long("number")
                 .help("Number lines")
                 .takes_value(false)
                 .conflicts_with("number_nonblank"),
@@ -38,6 +39,7 @@ pub fn get_args() -> MyResult<Config> {
         .arg(
             Arg::with_name("number_nonblank")
                 .short('b')
+                .long("number-nonblank")
                 .takes_value(false)
                 .help("Number nonblank lines"),
         )
@@ -66,26 +68,33 @@ fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
 
 fn read_file(fileio: Box<dyn BufRead>, config: &Config) -> MyResult<()>{
     let mut idx = 1;
+    let need_to_print_idx = config.number_nonblank_lines || config.number_lines;
     for line in fileio.lines() {
         let l = line?;
-        if config.number_lines ||
-            (l.is_empty() && config.number_nonblank_lines) {
-            println!("{} {}", idx, l);
-            idx += 1;
-        } else {
+        if !need_to_print_idx {
             println!("{}", l);
+            continue;
         }
+        if l.is_empty() && config.number_nonblank_lines {
+            println!("");
+            continue;
+        }
+        if !l.is_empty() && config.number_lines {
+            println!("{:>6}\t{}", idx, l);
+            idx += 1;
+            continue;
+        }
+        println!("{:>6}\t{}", idx, l);
+        idx += 1;
     }
     Ok(())
 }
 
 pub fn run(config: Config) -> MyResult<()> {
-    dbg!(&config);
     for filename in &config.files {
-        println!("{}", filename);
         match open(&filename) {
             Err(err) => eprintln!("Failed to open {}: {}", filename, err),
-            Ok(fileio) => { println!("Opened {}", filename);
+            Ok(fileio) => {
                 read_file(fileio, &config)?;
             },
         }

@@ -107,7 +107,7 @@ fn empty_n() -> TestResult {
 
 #[test]
 fn empty_b() -> TestResult {
-    run(&["-b", EMPTY], "/tests/expected/empty.txt.b.out")
+    run(&["-b", EMPTY], "tests/expected/empty.txt.b.out")
 }
 
 #[test]
@@ -127,7 +127,7 @@ fn fox_b() -> TestResult {
 
 #[test]
 fn spiders() -> TestResult {
-    run(&[SPIDERS], "tests/expected/spidres.txt.out")
+    run(&[SPIDERS], "tests/expected/spiders.txt.out")
 }
 
 #[test]
