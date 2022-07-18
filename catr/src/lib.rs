@@ -64,11 +64,28 @@ fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
     }
 }
 
-fn read_file(filename: &str, config: &Config) ->
-    io::Result<io::Lines<io::BufReader<File>>>{
-    let file = File::open(filename)?;
-    Ok(io::BufReader::new(file).lines())
+// fn read_file(filename: &str, config: &Config) ->
+//     io::Result<io::Lines<io::BufReader<File>>>{
+//     let file = File::open(filename)?;
+//     Ok(io::BufReader::new(file).lines())
+// }
+
+fn read_file(fileio: Box<dyn BufRead>, config: &Config) -> MyResult<()>{
+    for line in fileio.lines() {
+        let l = line?;
+        println!("{}", l);
+    }
+    Ok(())
 }
+
+// if let Ok(lines) =  {
+//     for line in lines {
+//         if let Ok(line) = line {
+//             println!("{}", line);
+//         }
+//     }
+// }
+
 
 pub fn run(config: Config) -> MyResult<()> {
     dbg!(&config);
@@ -76,15 +93,9 @@ pub fn run(config: Config) -> MyResult<()> {
         println!("{}", filename);
         match open(&filename) {
             Err(err) => eprintln!("Failed to open {}: {}", filename, err),
-            Ok(_) => { println!("Opened {}", filename);
-                if let Ok(lines) = read_file(&filename, &config) {
-                    for line in lines {
-                        if let Ok(line) = line {
-                            println!("{}", line);
-                        }
-                    }
-                }
-                },
+            Ok(fileio) => { println!("Opened {}", filename);
+                read_file(fileio, &config)?;
+            },
         }
     }
     Ok(())
