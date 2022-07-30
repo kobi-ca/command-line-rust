@@ -1,4 +1,5 @@
-use assert_cmd::Command;
+use assert_cmd::{Command, assert};
+use headr::parse_positive_int;
 use predicates::prelude::*;
 use rand::{distributions::Alphanumeric, Rng};
 use std::{
@@ -398,4 +399,25 @@ fn multiple_files_c4() -> TestResult {
         &["-c", "4", EMPTY, ONE, TWO, THREE, TEN],
         "tests/expected/all.c4.out",
     )
+}
+
+#[test]
+fn test_parse_positive_int_3() {
+    let res = parse_positive_int("3");
+    assert!(res.is_ok());
+    assert_eq!(res.unwrap(), 3);
+}
+
+#[test]
+fn test_parse_non_int() {
+    let res = parse_positive_int("foo");
+    assert!(res.is_err());
+    assert_eq!(res.unwrap_err().to_string(), "foo".to_string());
+}
+
+#[test]
+fn test_parse_zero() {
+    let res = parse_positive_int("0");
+    assert!(res.is_err());
+    assert_eq!(res.unwrap_err().to_string(), "0".to_string());
 }
