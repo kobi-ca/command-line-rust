@@ -53,6 +53,7 @@ pub fn get_args() -> MyResult<Config> {
                 .value_name("FILE")
                 .help("Input file(s)")
                 .allow_invalid_utf8(true)
+                .multiple_values(true)
                 .default_value("-"),
         )
         .get_matches();
