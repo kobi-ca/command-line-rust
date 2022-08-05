@@ -65,7 +65,8 @@ pub fn get_args() -> MyResult<Config> {
         if let Ok(value) = parse_positive_int(v) {
             b = Some(value);
         } else {
-            println!("illegal byte count -- {}", v);
+            eprintln!("Illegal byte count -- {}", v);
+            std::process::exit(1);
         }
     }
     let lines = matches.value_of("lines");
@@ -74,7 +75,8 @@ pub fn get_args() -> MyResult<Config> {
         if let Ok(value) = parse_positive_int(l_str) {
             l = value;
         } else {
-            println!("illegal line count -- {}", l_str);
+            eprintln!("Illegal line count -- {}", l_str);
+            std::process::exit(1);
         }
     }
     let files = matches.values_of_lossy("files").unwrap();
