@@ -51,17 +51,22 @@ pub fn get_args() -> MyResult<Config> {
         .arg(
             Arg::with_name("files")
                 .value_name("FILE")
-                .help("Input file(s) [default: -]")
+                .help("Input file(s)")
+                .allow_invalid_utf8(true)
                 .default_value("-"),
         )
         .get_matches();
     let bytes = matches.value_of("bytes");
+    let mut b = None;
+    if let Some(v) = bytes {
+        b = Some(parse_positive_int(v).unwrap());
+    }
     let lines = matches.value_of("lines").unwrap();
     let files = matches.values_of_lossy("files").unwrap();
     Ok(Config::new(
         files,
         parse_positive_int(lines).unwrap(),
-        Some(100),
+        b,
         /*parse_positive_int(bytes).unwrap()*/
     ))
 }
