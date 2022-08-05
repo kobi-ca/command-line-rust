@@ -2,6 +2,7 @@ use clap::{App, Arg};
 use std::error::Error;
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
+const DEFAULT_VALUE: usize = 10;
 
 #[derive(Debug)]
 pub struct Config {
@@ -30,6 +31,7 @@ pub fn get_args() -> MyResult<Config> {
                 .short('c')
                 .long("bytes")
                 .takes_value(true)
+                .conflicts_with("lines")
                 .help(
                     "print the first K bytes of each file\
                 with the leading '-', print all but the last\
@@ -40,7 +42,7 @@ pub fn get_args() -> MyResult<Config> {
             Arg::with_name("lines")
                 .short('n')
                 .long("lines")
-                .default_value("10")
+                .default_value(format!("{}", DEFAULT_VALUE).as_str())
                 .takes_value(true)
                 .help(
                     "print the first K lines instead of the \
@@ -60,13 +62,25 @@ pub fn get_args() -> MyResult<Config> {
     let bytes = matches.value_of("bytes");
     let mut b = None;
     if let Some(v) = bytes {
-        b = Some(parse_positive_int(v).unwrap());
+        if let Ok(value) = parse_positive_int(v) {
+            b = Some(value);
+        } else {
+            println!("illegal byte count -- {}", v);
+        }
     }
-    let lines = matches.value_of("lines").unwrap();
+    let lines = matches.value_of("lines");
+    let mut l = DEFAULT_VALUE;
+    if let Some(l_str) = lines {
+        if let Ok(value) = parse_positive_int(l_str) {
+            l = value;
+        } else {
+            println!("illegal line count -- {}", l_str);
+        }
+    }
     let files = matches.values_of_lossy("files").unwrap();
     Ok(Config::new(
         files,
-        parse_positive_int(lines).unwrap(),
+        l,
         b,
         /*parse_positive_int(bytes).unwrap()*/
     ))
