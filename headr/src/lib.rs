@@ -1,5 +1,6 @@
 use clap::{App, Arg};
-use std::error::Error;
+use std::{error::Error, io::{self, BufRead, BufReader}, f32::consts::E};
+use std::fs::File;
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
 const DEFAULT_VALUE: usize = 10;
@@ -79,8 +80,12 @@ pub fn get_args() -> MyResult<Config> {
 }
 
 pub fn run(config: Config) -> MyResult<()> {
-    println!("{:#?}", config);
-    dbg!(config);
+    for filename in config.files {
+        match open(&filename) {
+            Err(err) => eprintln!("{}: {}", filename, err),
+            Ok(_) => println!("Opened {}", filename),
+        }
+    }
     Ok(())
 }
 
@@ -88,5 +93,12 @@ pub fn parse_positive_int(val: &str) -> MyResult<usize> {
     match val.parse() {
         Ok(num)if num > 0 => Ok(num),
         _ => Err(From::from(val)),
+    }
+}
+
+fn open(filename: &str) ->MyResult<Box<dyn BufRead>> {
+    match filename {
+        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
+        _   => Ok(Box::new(BufReader::new(File::open(filename)?))),
     }
 }
