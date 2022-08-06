@@ -59,32 +59,22 @@ pub fn get_args() -> MyResult<Config> {
                 .default_value("-"),
         )
         .get_matches();
-    let bytes = matches.value_of("bytes");
-    let mut b = None;
-    if let Some(v) = bytes {
-        if let Ok(value) = parse_positive_int(v) {
-            b = Some(value);
-        } else {
-            eprintln!("Illegal byte count -- {}", v);
-            std::process::exit(1);
-        }
-    }
-    let lines = matches.value_of("lines");
-    let mut l = DEFAULT_VALUE;
-    if let Some(l_str) = lines {
-        if let Ok(value) = parse_positive_int(l_str) {
-            l = value;
-        } else {
-            eprintln!("Illegal line count -- {}", l_str);
-            std::process::exit(1);
-        }
-    }
+
+    let bytes = matches.value_of("bytes")
+        .map(parse_positive_int)
+        .transpose()
+        .map_err(|e| format!("Illegal byte count -- {}", e))?;
+
+    let lines = matches.value_of("lines")
+        .map(parse_positive_int)
+        .transpose()
+        .map_err(|e| format!("Illegal line count -- {}", e))?;
+
     let files = matches.values_of_lossy("files").unwrap();
     Ok(Config::new(
         files,
-        l,
-        b,
-        /*parse_positive_int(bytes).unwrap()*/
+        lines.unwrap(),
+        bytes,
     ))
 }
 
