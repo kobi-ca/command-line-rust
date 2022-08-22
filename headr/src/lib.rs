@@ -80,10 +80,13 @@ pub fn get_args() -> MyResult<Config> {
 }
 
 pub fn run(config: Config) -> MyResult<()> {
-    for filename in config.files {
-        match open(&filename) {
-            Err(err) => eprintln!("{}: {}", filename, err),
-            Ok(_) => println!("Opened {}", filename),
+    for filename in &config.files {
+        match open(filename) {
+            Err(err) => eprintln!("{}: {}\n", filename, err),
+            Ok(buf_read) => {
+                println!("==> {} <==", filename);
+                print_file(&config, buf_read)?;
+            }
         }
     }
     Ok(())
@@ -101,4 +104,19 @@ fn open(filename: &str) ->MyResult<Box<dyn BufRead>> {
         "-" => Ok(Box::new(BufReader::new(io::stdin()))),
         _   => Ok(Box::new(BufReader::new(File::open(filename)?))),
     }
+}
+
+fn print_file(config: &Config, buf_read: Box::<dyn BufRead>) ->MyResult<()> {
+    for (count, line) in buf_read.lines().enumerate() {
+        match line {
+            Ok(l) => print!("{}", l),
+            Err(_) => break,
+        }
+        // enumerate starts with 0
+        if count + 1  == config.lines {
+            break;
+        }
+    }
+    println!();
+    Ok(())
 }
