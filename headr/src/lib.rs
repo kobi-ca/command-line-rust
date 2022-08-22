@@ -1,5 +1,5 @@
 use clap::{App, Arg};
-use std::{error::Error, io::{self, BufRead, BufReader}, f32::consts::E};
+use std::{error::Error, io::{self, BufRead, BufReader}};
 use std::fs::File;
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
@@ -101,17 +101,47 @@ pub fn parse_positive_int(val: &str) -> MyResult<usize> {
     }
 }
 
-fn open(filename: &str) ->MyResult<Box<dyn BufRead>> {
+fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
     match filename {
         "-" => Ok(Box::new(BufReader::new(io::stdin()))),
         _   => Ok(Box::new(BufReader::new(File::open(filename)?))),
     }
 }
 
-fn print_file(config: &Config, buf_read: Box::<dyn BufRead>) ->MyResult<()> {
+fn print_file(config: &Config, buf_read: Box::<dyn BufRead>) -> MyResult<()> {
+    if config.bytes.is_some() {
+        print_file_by_chars(config, buf_read)?
+    } else {
+        print_file_by_lines(config, buf_read)?
+    }
+    Ok(())
+}
+
+fn print_file_by_chars(config: &Config, buf_read: Box::<dyn BufRead>) -> MyResult<()> {
+    for line in buf_read.lines() {
+        match line {
+            Ok(charaters) => print_n_chars(config.bytes.unwrap(), &charaters)?,
+            Err(_) => break,
+        }
+    }
+    Ok(())
+}
+
+fn print_n_chars(bytes: usize, charaters: &str) -> MyResult<()> {
+    for (count, c) in charaters.chars().enumerate() {
+        print!("{}", c);
+        // enumerate starts with 0
+        if count + 1 == bytes {
+            break;
+        }
+    }
+    Ok(())
+}
+
+fn print_file_by_lines(config: &Config, buf_read: Box::<dyn BufRead>) -> MyResult<()> {
     for (count, line) in buf_read.lines().enumerate() {
         match line {
-            Ok(l) => print!("{}", l),
+            Ok(l) => println!("{}", l),
             Err(_) => break,
         }
         // enumerate starts with 0
@@ -119,8 +149,6 @@ fn print_file(config: &Config, buf_read: Box::<dyn BufRead>) ->MyResult<()> {
             break;
         }
     }
-    if config.files.len() > 1 {
-        println!();
-    }
+
     Ok(())
 }
