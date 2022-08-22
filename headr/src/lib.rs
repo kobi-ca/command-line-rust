@@ -84,7 +84,9 @@ pub fn run(config: Config) -> MyResult<()> {
         match open(filename) {
             Err(err) => eprintln!("{}: {}\n", filename, err),
             Ok(buf_read) => {
-                println!("==> {} <==", filename);
+                if config.files.len() > 1 {
+                    println!("==> {} <==", filename);
+                }
                 print_file(&config, buf_read)?;
             }
         }
@@ -117,6 +119,8 @@ fn print_file(config: &Config, buf_read: Box::<dyn BufRead>) ->MyResult<()> {
             break;
         }
     }
-    println!();
+    if config.files.len() > 1 {
+        println!();
+    }
     Ok(())
 }
