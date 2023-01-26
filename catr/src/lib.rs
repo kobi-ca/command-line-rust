@@ -50,7 +50,7 @@ pub fn get_args() -> MyResult<Config> {
             Arg::new("files")
                 .value_parser(clap::value_parser!(String))
                 .value_name("FILE")
-                .help("Input file(s) [default: -]")
+                .help("Input file(s)")
                 .default_value("-")
                 .action(clap::ArgAction::Append),
         )
