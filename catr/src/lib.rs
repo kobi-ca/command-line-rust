@@ -19,7 +19,7 @@ impl Config {
     pub fn new(files: Vec<String>, number_lines: bool,
             number_nonblank_lines: bool) -> Config {
         Config {
-            files: files,
+            files,
             number_lines,
             number_nonblank_lines,
         }
@@ -82,7 +82,7 @@ fn read_file(fileio: Box<dyn BufRead>, config: &Config) -> MyResult<()>{
             continue;
         }
         if l.is_empty() && config.number_nonblank_lines {
-            println!("");
+            println!();
             continue;
         }
         if !l.is_empty() && config.number_lines {
@@ -98,7 +98,7 @@ fn read_file(fileio: Box<dyn BufRead>, config: &Config) -> MyResult<()>{
 
 pub fn run(config: Config) -> MyResult<()> {
     for filename in &config.files {
-        match open(&filename) {
+        match open(filename) {
             Err(err) => eprintln!("Failed to open {}: {}", filename, err),
             Ok(fileio) => {
                 read_file(fileio, &config)?;
