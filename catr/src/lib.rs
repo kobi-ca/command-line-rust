@@ -1,4 +1,4 @@
-use clap::{App, Arg};
+use clap::{Arg, Command};
 use std::error::Error;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
@@ -7,6 +7,8 @@ type MyResult<T> = Result<T, Box<dyn Error>>;
 
 #[derive(Debug)]
 pub struct Config {
+    // could use pathbuf as in https://docs.rs/clap/latest/clap/_tutorial/index.html
+    // with value_parser!(PathBuf)
     files: Vec<String>,
     // FIXME Option<> ?
     number_lines: bool,
@@ -25,37 +27,41 @@ impl Config {
 }
 
 pub fn get_args() -> MyResult<Config> {
-    let matches = App::new("catr")
-        .version("0.1.0")
+    let matches = Command::new("catr")
         .author("Kobi Cohen-Arazi <kobi.cohenarazi@gmail.com>")
+        .version("0.1.0")
+        .about("Cat files or stdin")
         .arg(
-            Arg::with_name("number")
+            Arg::new("number")
                 .short('n')
                 .long("number")
                 .help("Number lines")
-                .takes_value(false)
+                .action(clap::ArgAction::SetTrue)
                 .conflicts_with("number_nonblank"),
         )
         .arg(
-            Arg::with_name("number_nonblank")
+            Arg::new("number_nonblank")
+                .action(clap::ArgAction::SetTrue)
                 .short('b')
                 .long("number-nonblank")
-                .takes_value(false)
                 .help("Number nonblank lines"),
         )
         .arg(
-            Arg::with_name("files")
+            Arg::new("files")
+                .value_parser(clap::value_parser!(String))
                 .value_name("FILE")
                 .help("Input file(s) [default: -]")
                 .default_value("-")
-                .allow_invalid_utf8(true)
-                .multiple_values(true), //.required(true)
-                                        //.min_values(1)
+                .action(clap::ArgAction::Append),
         )
         .get_matches();
-    let number = matches.is_present("number");
-    let number_nonblank = matches.is_present("number_nonblank");
-    let files = matches.values_of_lossy("files").unwrap();
+    let number = matches.get_flag("number");
+    let number_nonblank = matches.get_flag("number_nonblank");
+    let files = matches
+        .get_many::<String>("files")
+        .unwrap()
+        .map(|v| v.to_owned())
+        .collect();
     Ok(Config::new(files, number, number_nonblank))
 }
 
