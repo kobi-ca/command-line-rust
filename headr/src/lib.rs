@@ -1,9 +1,12 @@
-use clap::{App, Arg};
-use std::{error::Error, io::{self, BufRead, BufReader}};
+use clap::{Arg, ArgAction, Command};
 use std::fs::File;
+use std::{
+    error::Error,
+    io::{self, BufRead, BufReader},
+};
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
-const DEFAULT_VALUE: usize = 10;
+const COUNT_DEFAULT_VALUE: usize = 10;
 
 #[derive(Debug)]
 pub struct Config {
@@ -23,15 +26,16 @@ impl Config {
 }
 
 pub fn get_args() -> MyResult<Config> {
-    let matches = App::new("headr")
+    let matches = Command::new("headr")
         .version("0.1.0")
         .author("Yacob (Kobi) Cohen-Arazi <kobi.cohenarazi@gmail.com")
-        .about("Rust head")
+        .about("Rust head app")
         .arg(
-            Arg::with_name("bytes")
+            Arg::new("bytes")
                 .short('c')
                 .long("bytes")
-                .takes_value(true)
+                .action(ArgAction::Set)
+                .value_parser(clap::value_parser!(usize))
                 .conflicts_with("lines")
                 .help(
                     "print the first K bytes of each file\
@@ -40,11 +44,12 @@ pub fn get_args() -> MyResult<Config> {
                 ),
         )
         .arg(
-            Arg::with_name("lines")
+            Arg::new("lines")
                 .short('n')
                 .long("lines")
-                .default_value(format!("{}", DEFAULT_VALUE).as_str())
-                .takes_value(true)
+                .action(ArgAction::Set)
+                .default_value("10") // FIXME cannot pass string. must be 'static
+                .value_parser(clap::value_parser!(usize))
                 .help(
                     "print the first K lines instead of the \
                 first 10; with the leading '-', print all but the \
@@ -52,31 +57,28 @@ pub fn get_args() -> MyResult<Config> {
                 ),
         )
         .arg(
-            Arg::with_name("files")
+            Arg::new("files")
+                .action(ArgAction::Append)
                 .value_name("FILE")
                 .help("Input file(s)")
-                .allow_invalid_utf8(true)
-                .multiple_values(true)
                 .default_value("-"),
         )
         .get_matches();
 
-    let bytes = matches.value_of("bytes")
-        .map(parse_positive_int)
-        .transpose()
-        .map_err(|e| format!("Illegal byte count -- {}", e))?;
+    let bytes: Option<usize> = matches.get_one("bytes").copied();
 
-    let lines = matches.value_of("lines")
-        .map(parse_positive_int)
-        .transpose()
-        .map_err(|e| format!("Illegal line count -- {}", e))?;
+    let lines = *matches.get_one("lines").expect("cannot get lines");
 
-    let files = matches.values_of_lossy("files").unwrap();
-    Ok(Config::new(
-        files,
-        lines.unwrap(),
-        bytes,
-    ))
+    let files: Vec<String> = matches.get_many("files").unwrap().cloned().collect();
+    println!("Config: {:?} {} {:#?}", bytes, lines, files);
+    Ok(Config::new(files, lines, bytes))
+}
+
+fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
+    match filename {
+        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
+        _ => Ok(Box::new(BufReader::new(File::open(filename)?))),
+    }
 }
 
 pub fn run(config: Config) -> MyResult<()> {
@@ -87,68 +89,68 @@ pub fn run(config: Config) -> MyResult<()> {
                 if config.files.len() > 1 {
                     println!("==> {} <==", filename);
                 }
-                print_file(&config, buf_read)?;
+                //print_file(&config, buf_read)?;
             }
         }
     }
     Ok(())
 }
 
-pub fn parse_positive_int(val: &str) -> MyResult<usize> {
-    match val.parse() {
-        Ok(num)if num > 0 => Ok(num),
-        _ => Err(From::from(val)),
-    }
-}
+// pub fn parse_positive_int(val: &str) -> MyResult<usize> {
+//     match val.parse() {
+//         Ok(num)if num > 0 => Ok(num),
+//         _ => Err(From::from(val)),
+//     }
+// }
 
-fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
-    match filename {
-        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
-        _   => Ok(Box::new(BufReader::new(File::open(filename)?))),
-    }
-}
+// fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
+//     match filename {
+//         "-" => Ok(Box::new(BufReader::new(io::stdin()))),
+//         _   => Ok(Box::new(BufReader::new(File::open(filename)?))),
+//     }
+// }
 
-fn print_file(config: &Config, buf_read: Box::<dyn BufRead>) -> MyResult<()> {
-    if config.bytes.is_some() {
-        print_file_by_chars(config, buf_read)?
-    } else {
-        print_file_by_lines(config, buf_read)?
-    }
-    Ok(())
-}
+// fn print_file(config: &Config, buf_read: Box::<dyn BufRead>) -> MyResult<()> {
+//     if config.bytes.is_some() {
+//         print_file_by_chars(config, buf_read)?
+//     } else {
+//         print_file_by_lines(config, buf_read)?
+//     }
+//     Ok(())
+// }
 
-fn print_file_by_chars(config: &Config, buf_read: Box::<dyn BufRead>) -> MyResult<()> {
-    for line in buf_read.lines() {
-        match line {
-            Ok(charaters) => print_n_chars(config.bytes.unwrap(), &charaters)?,
-            Err(_) => break,
-        }
-    }
-    Ok(())
-}
+// fn print_file_by_chars(config: &Config, buf_read: Box::<dyn BufRead>) -> MyResult<()> {
+//     for line in buf_read.lines() {
+//         match line {
+//             Ok(charaters) => print_n_chars(config.bytes.unwrap(), &charaters)?,
+//             Err(_) => break,
+//         }
+//     }
+//     Ok(())
+// }
 
-fn print_n_chars(bytes: usize, charaters: &str) -> MyResult<()> {
-    for (count, c) in charaters.chars().enumerate() {
-        print!("{}", c);
-        // enumerate starts with 0
-        if count + 1 == bytes {
-            break;
-        }
-    }
-    Ok(())
-}
+// fn print_n_chars(bytes: usize, charaters: &str) -> MyResult<()> {
+//     for (count, c) in charaters.chars().enumerate() {
+//         print!("{}", c);
+//         // enumerate starts with 0
+//         if count + 1 == bytes {
+//             break;
+//         }
+//     }
+//     Ok(())
+// }
 
-fn print_file_by_lines(config: &Config, buf_read: Box::<dyn BufRead>) -> MyResult<()> {
-    for (count, line) in buf_read.lines().enumerate() {
-        match line {
-            Ok(l) => println!("{}", l),
-            Err(_) => break,
-        }
-        // enumerate starts with 0
-        if count + 1  == config.lines {
-            break;
-        }
-    }
+// fn print_file_by_lines(config: &Config, buf_read: Box::<dyn BufRead>) -> MyResult<()> {
+//     for (count, line) in buf_read.lines().enumerate() {
+//         match line {
+//             Ok(l) => println!("{}", l),
+//             Err(_) => break,
+//         }
+//         // enumerate starts with 0
+//         if count + 1  == config.lines {
+//             break;
+//         }
+//     }
 
-    Ok(())
-}
+//     Ok(())
+// }
