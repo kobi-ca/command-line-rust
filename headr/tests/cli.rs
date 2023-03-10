@@ -1,5 +1,4 @@
-use assert_cmd::{Command, assert};
-use headr::parse_positive_int;
+use assert_cmd::{assert, Command};
 use predicates::prelude::*;
 use rand::{distributions::Alphanumeric, Rng};
 use std::{
@@ -36,7 +35,10 @@ fn gen_bad_file() -> String {
 
 fn dies_bad(args: &str, fmt_string: &str) -> TestResult {
     let bad = random_string();
-    let expected = format!("{} {}", &fmt_string, &bad);
+    let expected = format!(
+        "error: invalid value '{}' {}: invalid digit found in string",
+        &bad, &fmt_string
+    );
     Command::cargo_bin(PRG)?
         .args([args, &bad, EMPTY])
         .assert()
@@ -47,7 +49,7 @@ fn dies_bad(args: &str, fmt_string: &str) -> TestResult {
 
 #[test]
 fn dies_bad_bytes() -> TestResult {
-    let fmt_string = "Illegal byte count --";
+    let fmt_string = "for '--bytes <bytes>'";
     let args = "-c";
     dies_bad(args, fmt_string)?;
     Ok(())
@@ -55,7 +57,7 @@ fn dies_bad_bytes() -> TestResult {
 
 #[test]
 fn dies_bad_lines() -> TestResult {
-    let fmt_string = "Illegal line count --";
+    let fmt_string = "for '--lines <lines>'";
     let args = "-n";
     dies_bad(args, fmt_string)?;
     Ok(())
@@ -63,7 +65,7 @@ fn dies_bad_lines() -> TestResult {
 
 #[test]
 fn dies_bytes_and_lines() -> TestResult {
-    let msg = "The argument '--lines <lines>' \
+    let msg = "error: the argument '--lines <lines>' \
                     cannot be used with '--bytes <bytes>'";
     Command::cargo_bin(PRG)?
         .args(&["-n", "1", "-c", "2"])
@@ -399,25 +401,4 @@ fn multiple_files_c4() -> TestResult {
         &["-c", "4", EMPTY, ONE, TWO, THREE, TEN],
         "tests/expected/all.c4.out",
     )
-}
-
-#[test]
-fn test_parse_positive_int_3() {
-    let res = parse_positive_int("3");
-    assert!(res.is_ok());
-    assert_eq!(res.unwrap(), 3);
-}
-
-#[test]
-fn test_parse_non_int() {
-    let res = parse_positive_int("foo");
-    assert!(res.is_err());
-    assert_eq!(res.unwrap_err().to_string(), "foo".to_string());
-}
-
-#[test]
-fn test_parse_zero() {
-    let res = parse_positive_int("0");
-    assert!(res.is_err());
-    assert_eq!(res.unwrap_err().to_string(), "0".to_string());
 }

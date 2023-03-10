@@ -6,7 +6,7 @@ use std::{
 };
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
-const COUNT_DEFAULT_VALUE: usize = 10;
+const COUNT_DEFAULT_VALUE: &str = "10";
 
 #[derive(Debug)]
 pub struct Config {
@@ -48,7 +48,7 @@ pub fn get_args() -> MyResult<Config> {
                 .short('n')
                 .long("lines")
                 .action(ArgAction::Set)
-                .default_value("10") // FIXME cannot pass string. must be 'static
+                .default_value(COUNT_DEFAULT_VALUE) // FIXME cannot pass string. must be 'static
                 .value_parser(clap::value_parser!(usize))
                 .help(
                     "print the first K lines instead of the \
@@ -66,12 +66,22 @@ pub fn get_args() -> MyResult<Config> {
         .get_matches();
 
     let bytes: Option<usize> = matches.get_one("bytes").copied();
+    if let Some(bytes) = bytes {
+        if bytes == 0 {
+            return Err(From::from("Illegal byte count -- 0"));
+        }
+    }
 
     let lines = *matches.get_one("lines").expect("cannot get lines");
+    if lines == 0 {
+        return Err(From::from("Illegal line count -- 0"));
+    }
 
     let files: Vec<String> = matches.get_many("files").unwrap().cloned().collect();
     println!("Config: {:?} {} {:#?}", bytes, lines, files);
-    Ok(Config::new(files, lines, bytes))
+    let final_config = Config::new(files, lines, bytes);
+    println!("Config debug: {:#?}", final_config);
+    Ok(final_config)
 }
 
 fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
@@ -95,20 +105,6 @@ pub fn run(config: Config) -> MyResult<()> {
     }
     Ok(())
 }
-
-// pub fn parse_positive_int(val: &str) -> MyResult<usize> {
-//     match val.parse() {
-//         Ok(num)if num > 0 => Ok(num),
-//         _ => Err(From::from(val)),
-//     }
-// }
-
-// fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
-//     match filename {
-//         "-" => Ok(Box::new(BufReader::new(io::stdin()))),
-//         _   => Ok(Box::new(BufReader::new(File::open(filename)?))),
-//     }
-// }
 
 // fn print_file(config: &Config, buf_read: Box::<dyn BufRead>) -> MyResult<()> {
 //     if config.bytes.is_some() {
