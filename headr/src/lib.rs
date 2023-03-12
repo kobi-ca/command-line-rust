@@ -104,7 +104,7 @@ pub fn run(config: Config) -> MyResult<()> {
                     print!("{}", String::from_utf8_lossy(&bytes?));
                 } else {
                     let mut line = String::new();
-                    for l in 0..config.lines {
+                    for _ in 0..config.lines {
                         let bytes = buf_read.read_line(&mut line)?;
                         if bytes == 0 {
                             break;
@@ -115,53 +115,6 @@ pub fn run(config: Config) -> MyResult<()> {
                 }
             }
         }
-    }
-    Ok(())
-}
-
-fn print_file(config: &Config, buf_read: Box<dyn BufRead>) -> MyResult<()> {
-    if config.bytes.is_some() {
-        print_file_by_bytes(config, buf_read)?
-    } else {
-        print_file_by_lines(config, buf_read)?
-    }
-    Ok(())
-}
-
-fn print_file_by_bytes(config: &Config, buf_read: Box<dyn BufRead>) -> MyResult<()> {
-    for line in buf_read.lines() {
-        match line {
-            Ok(characters) => print_n_bytes(config.bytes.unwrap(), &characters)?,
-            Err(_) => break,
-        }
-    }
-    Ok(())
-}
-
-fn print_n_bytes(bytes: usize, characters: &str) -> MyResult<()> {
-    println!("bytes is {}", bytes);
-    let c = String::from_utf8_lossy(&characters.as_bytes()[..bytes]);
-    print!("{}", c);
-    Ok(())
-}
-
-fn print_file_by_lines(config: &Config, buf_read: Box<dyn BufRead>) -> MyResult<()> {
-    let mut lines_written = false;
-    for (count, line) in buf_read.lines().enumerate() {
-        match line {
-            Ok(l) => {
-                println!("{}", l);
-                lines_written = true;
-            }
-            Err(_) => break,
-        }
-        // enumerate starts with 0
-        if count + 1 == config.lines {
-            break;
-        }
-    }
-    if lines_written {
-        println!();
     }
     Ok(())
 }
