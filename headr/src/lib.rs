@@ -78,9 +78,9 @@ pub fn get_args() -> MyResult<Config> {
     }
 
     let files: Vec<String> = matches.get_many("files").unwrap().cloned().collect();
-    println!("Config: {:?} {} {:#?}", bytes, lines, files);
+    //println!("Config: {:?} {} {:#?}", bytes, lines, files);
     let final_config = Config::new(files, lines, bytes);
-    println!("Config debug: {:#?}", final_config);
+    //println!("Config debug: {:#?}", final_config);
     Ok(final_config)
 }
 
@@ -99,54 +99,56 @@ pub fn run(config: Config) -> MyResult<()> {
                 if config.files.len() > 1 {
                     println!("==> {} <==", filename);
                 }
-                //print_file(&config, buf_read)?;
+                print_file(&config, buf_read)?;
             }
         }
     }
     Ok(())
 }
 
-// fn print_file(config: &Config, buf_read: Box::<dyn BufRead>) -> MyResult<()> {
-//     if config.bytes.is_some() {
-//         print_file_by_chars(config, buf_read)?
-//     } else {
-//         print_file_by_lines(config, buf_read)?
-//     }
-//     Ok(())
-// }
+fn print_file(config: &Config, buf_read: Box<dyn BufRead>) -> MyResult<()> {
+    if config.bytes.is_some() {
+        print_file_by_bytes(config, buf_read)?
+    } else {
+        print_file_by_lines(config, buf_read)?
+    }
+    Ok(())
+}
 
-// fn print_file_by_chars(config: &Config, buf_read: Box::<dyn BufRead>) -> MyResult<()> {
-//     for line in buf_read.lines() {
-//         match line {
-//             Ok(charaters) => print_n_chars(config.bytes.unwrap(), &charaters)?,
-//             Err(_) => break,
-//         }
-//     }
-//     Ok(())
-// }
+fn print_file_by_bytes(config: &Config, buf_read: Box<dyn BufRead>) -> MyResult<()> {
+    for line in buf_read.lines() {
+        match line {
+            Ok(characters) => print_n_bytes(config.bytes.unwrap(), &characters)?,
+            Err(_) => break,
+        }
+    }
+    Ok(())
+}
 
-// fn print_n_chars(bytes: usize, charaters: &str) -> MyResult<()> {
-//     for (count, c) in charaters.chars().enumerate() {
-//         print!("{}", c);
-//         // enumerate starts with 0
-//         if count + 1 == bytes {
-//             break;
-//         }
-//     }
-//     Ok(())
-// }
+fn print_n_bytes(bytes: usize, characters: &str) -> MyResult<()> {
+    println!("bytes is {}", bytes);
+    let c = String::from_utf8_lossy(&characters.as_bytes()[..bytes]);
+    print!("{}", c);
+    Ok(())
+}
 
-// fn print_file_by_lines(config: &Config, buf_read: Box::<dyn BufRead>) -> MyResult<()> {
-//     for (count, line) in buf_read.lines().enumerate() {
-//         match line {
-//             Ok(l) => println!("{}", l),
-//             Err(_) => break,
-//         }
-//         // enumerate starts with 0
-//         if count + 1  == config.lines {
-//             break;
-//         }
-//     }
-
-//     Ok(())
-// }
+fn print_file_by_lines(config: &Config, buf_read: Box<dyn BufRead>) -> MyResult<()> {
+    let mut lines_written = false;
+    for (count, line) in buf_read.lines().enumerate() {
+        match line {
+            Ok(l) => {
+                println!("{}", l);
+                lines_written = true;
+            }
+            Err(_) => break,
+        }
+        // enumerate starts with 0
+        if count + 1 == config.lines {
+            break;
+        }
+    }
+    if lines_written {
+        println!();
+    }
+    Ok(())
+}
