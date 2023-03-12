@@ -2,7 +2,7 @@ use clap::{Arg, ArgAction, Command};
 use std::fs::File;
 use std::{
     error::Error,
-    io::{self, BufRead, BufReader},
+    io::{self, BufRead, BufReader, Read},
 };
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
@@ -95,11 +95,18 @@ pub fn run(config: Config) -> MyResult<()> {
     for filename in &config.files {
         match open(filename) {
             Err(err) => eprintln!("{}: {}\n", filename, err),
-            Ok(buf_read) => {
-                if config.files.len() > 1 {
-                    println!("==> {} <==", filename);
+            Ok(mut buf_read) => {
+                if let Some(num_bytes) = config.bytes {
+                    let mut handle = buf_read.take(num_bytes as u64);
+                } else {
+                    for line in buf_read.lines().take(config.lines) {
+                        println!("{}", line?);
+                    }
                 }
-                print_file(&config, buf_read)?;
+                // if config.files.len() > 1 {
+                //     println!("==> {} <==", filename);
+                // }
+                // print_file(&config, buf_read)?;
             }
         }
     }
