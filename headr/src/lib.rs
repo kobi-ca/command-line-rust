@@ -98,6 +98,9 @@ pub fn run(config: Config) -> MyResult<()> {
             Ok(mut buf_read) => {
                 if let Some(num_bytes) = config.bytes {
                     let mut handle = buf_read.take(num_bytes as u64);
+                    let mut buffer = vec![0; num_bytes];
+                    let bytes_read = handle.read(&mut buffer)?;
+                    print!("{}", String::from_utf8_lossy(&buffer[..bytes_read]));
                 } else {
                     let mut line = String::new();
                     for l in 0..config.lines {
