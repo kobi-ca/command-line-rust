@@ -99,14 +99,16 @@ pub fn run(config: Config) -> MyResult<()> {
                 if let Some(num_bytes) = config.bytes {
                     let mut handle = buf_read.take(num_bytes as u64);
                 } else {
-                    for line in buf_read.lines().take(config.lines) {
-                        println!("{}", line?);
+                    let mut line = String::new();
+                    for l in 0..config.lines {
+                        let bytes = buf_read.read_line(&mut line)?;
+                        if bytes == 0 {
+                            break;
+                        }
+                        print!("{}", line);
+                        line.clear();
                     }
                 }
-                // if config.files.len() > 1 {
-                //     println!("==> {} <==", filename);
-                // }
-                // print_file(&config, buf_read)?;
             }
         }
     }
