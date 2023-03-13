@@ -92,10 +92,19 @@ fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
 }
 
 pub fn run(config: Config) -> MyResult<()> {
-    for filename in &config.files {
+    let num_files = config.files.len();
+    for (file_num, filename) in config.files.iter().enumerate() {
         match open(filename) {
             Err(err) => eprintln!("{}: {}\n", filename, err),
             Ok(mut buf_read) => {
+                if num_files > 1 {
+                    println!(
+                        "{}==> {} <==",
+                        if file_num > 0 { "\n" } else { "" },
+                        filename
+                    );
+                }
+
                 if let Some(num_bytes) = config.bytes {
                     let bytes = buf_read
                         .bytes()
