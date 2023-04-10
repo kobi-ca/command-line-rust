@@ -32,14 +32,35 @@ pub fn get_args() -> MyResult<Config> {
                 .action(ArgAction::SetTrue)
                 .help("Show character count"),
         )
+        .arg(
+            Arg::new("lines")
+                .short('l')
+                .long("lines")
+                .action(ArgAction::SetTrue)
+                .help("Show line count"),
+        )
+        .arg(
+            Arg::new("words")
+                .short('w')
+                .long("words")
+                .action(ArgAction::SetTrue)
+                .help("Show word count"),
+        )
+        .arg(
+            Arg::new("files")
+                .action(ArgAction::Append)
+                .value_name("FILE")
+                .help("Input files(s)")
+                .default_value("-"),
+        )
         .get_matches();
 
     Ok(Config {
-        files: vec![],
-        lines: false,
-        words: false,
-        bytes: false,
-        chars: false,
+        files: matches.get_many("files").unwrap().cloned().collect(),
+        lines: matches.get_flag("lines"),
+        words: matches.get_flag("words"),
+        bytes: matches.get_flag("bytes"),
+        chars: matches.get_flag("chars"),
     })
 }
 
