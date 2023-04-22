@@ -1,10 +1,31 @@
-use clap::{Arg, ArgAction, Command};
+use clap::Parser;
 use std::{
     error::Error,
     io::{BufRead, BufReader},
+    path::PathBuf,
 };
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
+
+#[derive(Parser)]
+#[command(author("Yacob (Kobi) Cohen-Arazi <kobi.cohenarazi@gmail.com>"), version("0.1.0"), about("Rust wc app"), long_about = None)]
+struct Cli {
+    #[arg(value_name = "FILE", default_value("-"))]
+    config: Option<PathBuf>,
+    #[arg(short('l'), long("lines"), help("Show line count"))]
+    lines: bool,
+    #[arg(short('w'), long("words"), help("Show word count"))]
+    words: bool,
+    #[arg(
+        short('c'),
+        long("bytes"),
+        conflicts_with("chars"),
+        help("Show byte count")
+    )]
+    bytes: bool,
+    #[arg(short('m'), long("chars"), help("Show character count"))]
+    chars: bool,
+}
 
 #[derive(Debug)]
 pub struct Config {
@@ -24,64 +45,31 @@ pub struct FileInfo {
 }
 
 pub fn get_args() -> MyResult<Config> {
-    let matches = Command::new("wcr")
-        .version("0.1.0")
-        .author("Yacob (Kobi) Cohen-Arazi <kobi.cohenarazi@gmail.com>")
-        .about("Rust wc app")
-        .arg(
-            Arg::new("bytes")
-                .short('c')
-                .long("bytes")
-                .action(ArgAction::SetTrue)
-                .conflicts_with("chars")
-                .help("Show byte count"),
-        )
-        .arg(
-            Arg::new("chars")
-                .short('m')
-                .long("chars")
-                .action(ArgAction::SetTrue)
-                .help("Show character count"),
-        )
-        .arg(
-            Arg::new("lines")
-                .short('l')
-                .long("lines")
-                .action(ArgAction::SetTrue)
-                .help("Show line count"),
-        )
-        .arg(
-            Arg::new("words")
-                .short('w')
-                .long("words")
-                .action(ArgAction::SetTrue)
-                .help("Show word count"),
-        )
-        .arg(
-            Arg::new("files")
-                .action(ArgAction::Append)
-                .value_name("FILE")
-                .help("Input files(s)")
-                .default_value("-"),
-        )
-        .get_matches();
-
-    let mut l = matches.get_flag("lines");
-    let mut w = matches.get_flag("words");
-    let mut b = matches.get_flag("bytes");
-    let c = matches.get_flag("chars");
-    if [l, w, b, c].iter().all(|v| !v) {
-        l = true;
-        w = true;
-        b = true;
-    }
+    let cli = Cli::parse();
     Ok(Config {
-        files: matches.get_many("files").unwrap().cloned().collect(),
-        lines: l,
-        words: w,
-        bytes: b,
-        chars: c,
+        files: vec![],
+        lines: false,
+        words: false,
+        bytes: false,
+        chars: false,
     })
+
+    // let mut l = matches.get_flag("lines");
+    // let mut w = matches.get_flag("words");
+    // let mut b = matches.get_flag("bytes");
+    // let c = matches.get_flag("chars");
+    // if [l, w, b, c].iter().all(|v| !v) {
+    //     l = true;
+    //     w = true;
+    //     b = true;
+    // }
+    // Ok(Config {
+    //     files: matches.get_many("files").unwrap().cloned().collect(),
+    //     lines: l,
+    //     words: w,
+    //     bytes: b,
+    //     chars: c,
+    // })
 }
 
 fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
