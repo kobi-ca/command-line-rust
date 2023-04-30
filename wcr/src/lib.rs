@@ -11,7 +11,7 @@ type MyResult<T> = Result<T, Box<dyn Error>>;
 #[command(author("Yacob (Kobi) Cohen-Arazi <kobi.cohenarazi@gmail.com>"), version("0.1.0"), about("Rust wc app"), long_about = None)]
 struct Cli {
     #[arg(value_name = "FILE", default_value("-"))]
-    config: Option<PathBuf>,
+    file: Vec<String>,
     #[arg(short('l'), long("lines"), help("Show line count"))]
     lines: bool,
     #[arg(short('w'), long("words"), help("Show word count"))]
@@ -46,30 +46,22 @@ pub struct FileInfo {
 
 pub fn get_args() -> MyResult<Config> {
     let cli = Cli::parse();
-    Ok(Config {
-        files: vec![],
-        lines: false,
-        words: false,
-        bytes: false,
-        chars: false,
-    })
-
-    // let mut l = matches.get_flag("lines");
-    // let mut w = matches.get_flag("words");
-    // let mut b = matches.get_flag("bytes");
-    // let c = matches.get_flag("chars");
-    // if [l, w, b, c].iter().all(|v| !v) {
-    //     l = true;
-    //     w = true;
-    //     b = true;
-    // }
-    // Ok(Config {
-    //     files: matches.get_many("files").unwrap().cloned().collect(),
-    //     lines: l,
-    //     words: w,
-    //     bytes: b,
-    //     chars: c,
-    // })
+    let mut cfg = Config {
+        files: cli.file,
+        lines: cli.lines,
+        words: cli.words,
+        bytes: cli.bytes,
+        chars: cli.chars,
+    };
+    if [cfg.lines, cfg.words, cfg.bytes, cfg.chars]
+        .iter()
+        .all(|v| !v)
+    {
+        cfg.lines = true;
+        cfg.words = true;
+        cfg.bytes = true;
+    }
+    Ok(cfg)
 }
 
 fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
