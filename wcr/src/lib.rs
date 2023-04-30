@@ -77,8 +77,16 @@ pub fn run(config: Config) -> MyResult<()> {
             Ok(file) => {
                 if let Ok(info) = count(file) {
                     println!(
-                        "{:>8}{:>8}{:>8} {}",
-                        info.num_lines, info.num_words, info.num_bytes, filename
+                        "{}{}{}{}{}",
+                        format_field(info.num_lines, config.lines),
+                        format_field(info.num_words, config.words),
+                        format_field(info.num_bytes, config.bytes),
+                        format_field(info.num_chars, config.chars),
+                        if filename == "-" {
+                            "".to_string()
+                        } else {
+                            format!(" {}", filename)
+                        }
                     );
                 }
             }
