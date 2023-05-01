@@ -35,7 +35,7 @@ pub struct Config {
     chars: bool,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub struct FileInfo {
     num_lines: usize,
     num_words: usize,
@@ -70,7 +70,18 @@ fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
     }
 }
 
+impl FileInfo {
+    fn add(&mut self, info: &FileInfo) -> &Self {
+        self.num_lines += info.num_lines;
+        self.num_words += info.num_words;
+        self.num_bytes += info.num_bytes;
+        self.num_chars += info.num_chars;
+        self
+    }
+}
+
 pub fn run(config: Config) -> MyResult<()> {
+    let mut total = FileInfo::default();
     for filename in &config.files {
         match open(filename) {
             Err(err) => eprintln!("{}: {}", filename, err),
@@ -88,9 +99,19 @@ pub fn run(config: Config) -> MyResult<()> {
                             format!(" {}", filename)
                         }
                     );
+                    total.add(&info);
                 }
             }
         }
+    }
+    if config.files.len() > 1 {
+        println!(
+            "{}{}{}{} total",
+            format_field(total.num_lines, config.lines),
+            format_field(total.num_words, config.words),
+            format_field(total.num_bytes, config.bytes),
+            format_field(total.num_chars, config.chars)
+        )
     }
     Ok(())
 }
