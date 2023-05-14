@@ -1,0 +1,2 @@
+1. write to output file - use the new file, dyn Write trait one instead of Option<String>
+2. pass more tests, some will fail beacause of clap 4.x

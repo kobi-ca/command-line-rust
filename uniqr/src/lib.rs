@@ -2,7 +2,7 @@ use clap::Parser;
 use std::{
     error::Error,
     fs::File,
-    io::{self, BufRead, BufReader},
+    io::{self, BufRead, BufReader, Write},
 };
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
@@ -36,21 +36,40 @@ pub fn get_args() -> MyResult<Config> {
     Ok(cfg)
 }
 
+fn print_out(line: &str, out: &Option<String>) {
+    print!("{}", line);
+}
+
+fn print_out_with_count(line: &str, count: u64, out: &Option<String>) {
+    print!("{:>4} {}", count, line);
+}
+
 fn print_with_count(count: u64, previous_line: &str, config: &Config) {
     if count > 0 {
         if config.count {
-            print!("{:>4} {}", count, previous_line);
+            print_out_with_count(previous_line, count, &config.out_file);
         } else {
-            print!("{}", previous_line);
+            print_out(previous_line, &config.out_file)
         }
     }
 }
+
+// anoter way is to create a closure and call it. Book recommending it.
+// let print = |count: u64, text: &str| {
+//    if count > 0 {... } else { ... }
+// }
+//
+// However, I prefer to have it as a separate function.
 
 pub fn run(config: Config) -> MyResult<()> {
     let mut file = open(&config.in_file).map_err(|e| format!("{}: {}", config.in_file, e))?;
     let mut current_line = String::new();
     let mut previous_line = String::new();
     let mut count: u64 = 0;
+    let mut out_file: Box<dyn Write> = match &config.out_file {
+        Some(out_name) => Box::new(File::create(out_name)?),
+        _ => Box::new(io::stdout()),
+    };
     loop {
         let bytes = file.read_line(&mut current_line)?;
         if bytes == 0 {
