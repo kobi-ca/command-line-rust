@@ -14,7 +14,7 @@ struct Cli {
     in_file: String,
     #[arg(value_name = "Output file")]
     out_file: Option<String>,
-    #[arg(short('c'), long("count"), help("Show couns"))]
+    #[arg(short('c'), long("count"), help("Show counts"))]
     count: bool,
 }
 
@@ -35,7 +35,28 @@ pub fn get_args() -> MyResult<Config> {
 }
 
 pub fn run(config: Config) -> MyResult<()> {
-    println!("{:?}", config);
+    let mut file = open(&config.in_file).map_err(|e| format!("{}: {}", config.in_file, e))?;
+    let mut current_line = String::new();
+    let mut previous_line = String::new();
+    let mut count: u64 = 0;
+    loop {
+        let bytes = file.read_line(&mut current_line)?;
+        if bytes == 0 {
+            break;
+        }
+        if current_line.trim_end() != previous_line.trim_end() {
+            if count > 0 {
+                print!("{}", previous_line);
+            }
+            previous_line = current_line.clone();
+            count = 0;
+        }
+        count += 1;
+        current_line.clear();
+    }
+    if count > 0 {
+        print!("{}", previous_line);
+    }
     Ok(())
 }
 
