@@ -36,22 +36,28 @@ pub fn get_args() -> MyResult<Config> {
     Ok(cfg)
 }
 
-fn print_out(line: &str, out: &Box<dyn Write>) {
-    print!("{}", line);
+fn print_out(line: &str, out: &mut Box<dyn Write>) -> MyResult<()> {
+    write!(out, "{}", line).map_err(|e| format!("{}", e).into())
 }
 
-fn print_out_with_count(line: &str, count: u64, out: &Box<dyn Write>) {
-    print!("{:>4} {}", count, line);
+fn print_out_with_count(line: &str, count: u64, out: &mut Box<dyn Write>) -> MyResult<()> {
+    write!(out, "{:>4} {}", count, line).map_err(|e| format!("{}", e).into())
 }
 
-fn print_with_count(count: u64, previous_line: &str, count_cfg: bool, out: &Box<dyn Write>) {
+fn print_with_count(
+    count: u64,
+    previous_line: &str,
+    count_cfg: bool,
+    mut out: &mut Box<dyn Write>,
+) -> MyResult<()> {
     if count > 0 {
         if count_cfg {
-            print_out_with_count(previous_line, count, &out);
+            print_out_with_count(previous_line, count, out)?
         } else {
-            print_out(previous_line, &out)
+            print_out(previous_line, out)?
         }
     }
+    Ok(())
 }
 
 // anoter way is to create a closure and call it. Book recommending it.
@@ -76,7 +82,7 @@ pub fn run(config: Config) -> MyResult<()> {
             break;
         }
         if current_line.trim_end() != previous_line.trim_end() {
-            print_with_count(count, &previous_line, config.count, &out_file);
+            print_with_count(count, &previous_line, config.count, &mut out_file);
             previous_line = current_line.clone();
             count = 0;
         }
@@ -84,7 +90,7 @@ pub fn run(config: Config) -> MyResult<()> {
         current_line.clear();
     }
     if count > 0 {
-        print_with_count(count, &previous_line, config.count, &out_file);
+        print_with_count(count, &previous_line, config.count, &mut out_file)?;
     }
     Ok(())
 }
