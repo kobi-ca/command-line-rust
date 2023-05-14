@@ -27,11 +27,23 @@ pub struct Config {
 
 pub fn get_args() -> MyResult<Config> {
     let cli = Cli::parse();
-    Ok(Config {
+    let cfg = Config {
         in_file: cli.in_file,
         out_file: cli.out_file,
         count: cli.count,
-    })
+    };
+    //println!("{:?}", cfg);
+    Ok(cfg)
+}
+
+fn print_with_count(count: u64, previous_line: &str, config: &Config) {
+    if count > 0 {
+        if config.count {
+            print!("{:>4} {}", count, previous_line);
+        } else {
+            print!("{}", previous_line);
+        }
+    }
 }
 
 pub fn run(config: Config) -> MyResult<()> {
@@ -45,9 +57,7 @@ pub fn run(config: Config) -> MyResult<()> {
             break;
         }
         if current_line.trim_end() != previous_line.trim_end() {
-            if count > 0 {
-                print!("{}", previous_line);
-            }
+            print_with_count(count, &previous_line, &config);
             previous_line = current_line.clone();
             count = 0;
         }
@@ -55,7 +65,7 @@ pub fn run(config: Config) -> MyResult<()> {
         current_line.clear();
     }
     if count > 0 {
-        print!("{}", previous_line);
+        print_with_count(count, &previous_line, &config);
     }
     Ok(())
 }
