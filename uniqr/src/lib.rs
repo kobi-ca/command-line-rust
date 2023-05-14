@@ -1,5 +1,9 @@
 use clap::Parser;
-use std::{error::Error};
+use std::{
+    error::Error,
+    fs::File,
+    io::{self, BufRead, BufReader},
+};
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
 
@@ -21,13 +25,23 @@ pub struct Config {
     count: bool,
 }
 
-
 pub fn get_args() -> MyResult<Config> {
     let cli = Cli::parse();
-    Ok(Config {in_file: cli.in_file, out_file: cli.out_file, count: cli.count})
+    Ok(Config {
+        in_file: cli.in_file,
+        out_file: cli.out_file,
+        count: cli.count,
+    })
 }
 
 pub fn run(config: Config) -> MyResult<()> {
     println!("{:?}", config);
     Ok(())
+}
+
+fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
+    match filename {
+        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
+        _ => Ok(Box::new(BufReader::new(File::open(filename)?))),
+    }
 }
