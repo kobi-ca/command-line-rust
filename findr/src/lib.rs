@@ -48,11 +48,19 @@ pub struct Config {
 
 pub fn get_args() -> MyResult<Config> {
     let cli = Cli::parse();
+    let et = cli
+        .entry_types
+        .iter()
+        .map(|v| match v {
+            EntryTypeMode::f => EntryType::File,
+            EntryTypeMode::d => EntryType::Dir,
+            EntryTypeMode::l => EntryType::Link,
+        })
+        .collect();
     let cfg = Config {
         paths: cli.paths,
         names: cli.names,
-        entry_types: Vec::<EntryType>::with_capacity(10),
-        //entry_types: cli.entry_types,
+        entry_types: et,
     };
     Ok(cfg)
 }
