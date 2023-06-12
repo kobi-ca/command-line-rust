@@ -27,13 +27,14 @@ enum EntryTypeMode {
 struct Cli {
     #[arg(value_name = "Search paths", default_value("."))]
     paths: Vec<String>,
-    #[arg(value_name = "Name", short('n'), long("name"), help("Name"))]
+    #[arg(value_name = "Name", short('n'), long("name"), num_args(0..), help("Name"))]
     names: Vec<Regex>,
     #[arg(
         value_name = "Entry type",
         value_enum,
         short('t'),
         long("type"),
+        num_args(0..),
         help("Entry type [possible values: f, d, l]")
     )]
     entry_types: Vec<EntryTypeMode>,
