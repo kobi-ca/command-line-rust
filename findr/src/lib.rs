@@ -85,7 +85,7 @@ fn name_included(config: &Config, entry: &walkdir::DirEntry) -> bool {
 }
 
 fn handle_entry(config: &Config, entry: &walkdir::DirEntry) {
-    if file_type_included(&config, &entry) || name_included(&config, &entry) {
+    if file_type_included(&config, &entry) && name_included(&config, &entry) {
         println!("{}", entry.path().display());
     }
 }
