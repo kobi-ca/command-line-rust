@@ -1,4 +1,3 @@
-use crate::EntryType::*;
 use clap::{Parser, ValueEnum};
 use regex::Regex;
 use std::{error::Error, fs::DirEntry};
@@ -16,11 +15,11 @@ enum EntryType {
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 enum EntryTypeMode {
     /// File
-    f,
+    F,
     /// Directory
-    d,
+    D,
     /// Link
-    l,
+    L,
 }
 
 #[derive(Parser)]
@@ -54,9 +53,9 @@ pub fn get_args() -> MyResult<Config> {
         .entry_types
         .iter()
         .map(|v| match v {
-            EntryTypeMode::f => EntryType::File,
-            EntryTypeMode::d => EntryType::Dir,
-            EntryTypeMode::l => EntryType::Link,
+            EntryTypeMode::F => EntryType::File,
+            EntryTypeMode::D => EntryType::Dir,
+            EntryTypeMode::L => EntryType::Link,
         })
         .collect();
     let cfg = Config {
