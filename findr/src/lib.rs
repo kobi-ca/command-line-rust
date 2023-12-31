@@ -66,28 +66,28 @@ pub fn get_args() -> MyResult<Config> {
     Ok(cfg)
 }
 
-fn file_type_included(config: &Config, entry: &walkdir::DirEntry) -> bool {
-    config.entry_types.is_empty()
-        || config.entry_types.iter().any(|et| match et {
-            Link => entry.file_type().is_symlink(),
-            Dir => entry.file_type().is_dir(),
-            File => entry.file_type().is_file(),
-        })
-}
+// fn file_type_included(config: &Config, entry: &walkdir::DirEntry) -> bool {
+//     config.entry_types.is_empty()
+//         || config.entry_types.iter().any(|et| match et {
+//             Link => entry.file_type().is_symlink(),
+//             Dir => entry.file_type().is_dir(),
+//             File => entry.file_type().is_file(),
+//         })
+// }
 
-fn name_included(config: &Config, entry: &walkdir::DirEntry) -> bool {
-    config.names.is_empty()
-        || config
-            .names
-            .iter()
-            .any(|re| re.is_match(&entry.file_name().to_string_lossy()))
-}
+// fn name_included(config: &Config, entry: &walkdir::DirEntry) -> bool {
+//     config.names.is_empty()
+//         || config
+//             .names
+//             .iter()
+//             .any(|re| re.is_match(&entry.file_name().to_string_lossy()))
+// }
 
-fn handle_entry(config: &Config, entry: &walkdir::DirEntry) {
-    if file_type_included(&config, &entry) && name_included(&config, &entry) {
-        println!("{}", entry.path().display());
-    }
-}
+// fn handle_entry(config: &Config, entry: &walkdir::DirEntry) {
+//     if file_type_included(&config, &entry) && name_included(&config, &entry) {
+//         println!("{}", entry.path().display());
+//     }
+// }
 
 pub fn run(config: Config) -> MyResult<()> {
     for path in &config.paths {
